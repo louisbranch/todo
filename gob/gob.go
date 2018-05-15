@@ -165,6 +165,28 @@ func (s *Storage) Delete(id string) error {
 	return s.save()
 }
 
+// Clean remove tasks that are done.
+func (s *Storage) Clean() error {
+
+	s.Entries = clean(s.Entries)
+
+	return s.save()
+}
+
+func clean(entries []*entry) []*entry {
+	var result []*entry
+
+	for _, e := range entries {
+		if e.Done {
+			continue
+		}
+		e.Entries = clean(e.Entries)
+		result = append(result, e)
+	}
+
+	return result
+}
+
 func (s *Storage) save() error {
 	flags := os.O_CREATE | os.O_TRUNC | os.O_WRONLY
 	f, err := os.OpenFile(s.file, flags, 0644)

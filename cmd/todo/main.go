@@ -22,6 +22,7 @@ var help = ` todo help:
   todo edit [task id] [new task description]
   todo done [task id]
   todo rm   [task id]
+  todo clean
 `
 
 func main() {
@@ -39,11 +40,13 @@ func main() {
 
 	if len(os.Args) < 2 {
 		printTasks(storage)
-	} else if len(os.Args) < 3 {
-		fmt.Print(help)
+		return
 	}
 
 	switch os.Args[1] {
+	case "-h", "--help":
+		fmt.Print(help)
+		return
 	case "add":
 		text := strings.Join(os.Args[2:], " ")
 		exit(storage.Create(root, text))
@@ -61,6 +64,12 @@ func main() {
 	case "rm":
 		id := os.Args[2]
 		exit(storage.Delete(id))
+	case "clean":
+		exit(storage.Clean())
+	default:
+		fmt.Print("Invalid usage\n\n")
+		fmt.Print(help)
+		return
 	}
 	printTasks(storage)
 }

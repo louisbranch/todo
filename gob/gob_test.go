@@ -264,6 +264,56 @@ func TestDelete(t *testing.T) {
 	}
 }
 
+func TestClean(t *testing.T) {
+	s := new(t, []tcase{
+		{"", "1"},
+		{"1", "1-1"},
+		{"1", "1-2"},
+		{"1", "1-3"},
+		{"1.2", "1-2-1"},
+		{"1.2", "1-2-2"},
+		{"", "2"},
+		{"2", "2-1"},
+		{"2.1", "2-1-1"},
+	})
+
+	want := []todo.Task{
+		todo.Task{
+			ID:   "1",
+			Text: "1",
+			Tasks: []todo.Task{
+				todo.Task{ID: "1.1", Text: "1-1"},
+				todo.Task{
+					ID:   "1.2",
+					Text: "1-2",
+					Tasks: []todo.Task{
+						todo.Task{ID: "1.2.1", Text: "1-2-2"},
+					},
+				},
+				todo.Task{ID: "1.3", Text: "1-3"},
+			},
+		},
+		todo.Task{
+			ID:   "2",
+			Text: "2",
+		},
+	}
+
+	s.Finish("1.2.1")
+	s.Finish("2.1")
+
+	err := s.Clean()
+	if err != nil {
+		t.Errorf("Expected no error, got %s", err)
+	}
+
+	got := s.All()
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("want\n%v got\n%v", want, got)
+	}
+}
+
 func new(t *testing.T, cases []tcase) *Storage {
 	f, err := ioutil.TempFile("", "todo")
 	if err != nil {
